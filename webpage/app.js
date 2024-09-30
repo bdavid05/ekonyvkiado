@@ -5,9 +5,11 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
+const bcrypt = require('bcrypt');  // Jelszótitkosításhoz szükséges
+const session = require('express-session');  // Felhasználói session kezeléshez
 
 const app = express();
-const port = 3000;
+const port = 3001;
 
 // Middleware
 app.use(cors());
@@ -16,6 +18,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Statikus fájlok kiszolgálása
 app.use(express.static('public'));
+
+// Session kezelés
+app.use(session({
+    secret: 'titkos_kulcs',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }  // Ha HTTPS-t használsz, akkor secure: true
+}));
 
 // Adatbázis kapcsolat
 const db = mysql.createConnection({
@@ -45,15 +55,45 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Felhasználó regisztráció
-app.post('/register', (req, res) => {
+app.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
     
+    // Jelszó titkosítása bcrypt használatával
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
     const sql = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
-    db.query(sql, [username, email, password], (err, result) => {
+    db.query(sql, [username, email, hashedPassword], (err, result) => {
         if (err) {
             return res.status(500).send('Hiba történt a regisztráció során.');
         }
         res.status(200).send('Sikeres regisztráció!');
+    });
+});
+
+// Felhasználó bejelentkezés
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+
+    const sql = 'SELECT * FROM users WHERE email = ?';
+    db.query(sql, [email], async (err, results) => {
+        if (err) {
+            return res.status(500).send('Hiba történt az adatbázis lekérdezésekor.');
+        }
+        if (results.length === 0) {
+            return res.status(400).send('Helytelen email vagy jelszó.');
+        }
+
+        const user = results[0];
+
+        // Jelszó ellenőrzése bcrypt használatával
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+            return res.status(400).send('Helytelen email vagy jelszó.');
+        }
+
+        // Bejelentkezési session létrehozása
+        req.session.userId = user.id;
+        res.status(200).send('Sikeres bejelentkezés!');
     });
 });
 
