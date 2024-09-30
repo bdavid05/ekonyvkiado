@@ -1,0 +1,6 @@
+mkdir registration-app
+cd registration-app
+
+npm init -y
+
+npm install express mysql body-parser cors
