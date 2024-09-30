@@ -1,5 +1,5 @@
-mkdir registration-app
-cd registration-app
+mkdir webpage
+cd webpage
 
 npm init -y
 
