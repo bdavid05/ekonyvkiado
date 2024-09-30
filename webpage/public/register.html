@@ -4,92 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Regisztráció</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            background-color: white;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
-            width: 300px;
-        }
-        h2 {
-            text-align: center;
-        }
-        input[type="text"], input[type="email"], input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Regisztráció</h2>
-        <form id="registerForm">
-            <label for="username">Felhasználónév:</label>
-            <input type="text" id="username" name="username" required>
-
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-
-            <label for="password">Jelszó:</label>
-            <input type="password" id="password" name="password" required>
-
-            <button type="submit">Regisztráció</button>
-        </form>
-        <div id="responseMessage"></div>
-    </div>
-
+    <h1>Regisztráció</h1>
+    <form id="registerForm">
+        <input type="text" name="username" placeholder="Felhasználónév" required>
+        <input type="email" name="email" placeholder="E-mail" required>
+        <input type="password" name="password" placeholder="Jelszó" required>
+        <button type="submit">Regisztrálás</button>
+    </form>
+    <p>Már van fiókja? <a href="login.html">Jelentkezzen be!</a></p>
+    
     <script>
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            // Form adatok kinyerése
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            // Adatok elküldése a szervernek
-            fetch('http://localhost:3000/register', {
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('/register', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, email, password })
+                body: formData
             })
             .then(response => response.text())
             .then(data => {
-                // Sikeres válasz megjelenítése
-                document.getElementById('responseMessage').innerText = data;
+                alert(data);
+                if (response.ok) {
+                    window.location.href = 'index.html'; // Átirányítás a főoldalra
+                }
             })
-            .catch(error => {
-                // Hibakezelés
-                document.getElementById('responseMessage').innerText = 'Hiba történt: ' + error.message;
-            });
+            .catch(error => console.error('Hiba:', error));
         });
     </script>
 </body>
