@@ -1,7 +1,8 @@
-Rendben, itt van egy átdolgozott adatbázis-struktúra, amely figyelembe veszi, hogy a felhasználók PDF fájlokat tölthetnek fel, és azokat képekké konvertálva tárolhatók az oldalakon.
-
 Adatbázis Tervezése
+
 1. Felhasználók tábla (users)
+
+
 Oszlop neve	Típus	Leírás
 id	INT (PK)	Egyedi azonosító, auto increment
 username	VARCHAR(50)	Felhasználónév
@@ -10,7 +11,9 @@ password	VARCHAR(255)	Jelszó (hash-elt)
 profile_picture	VARCHAR(255)	Profilkép URL
 created_at	TIMESTAMP	Fiók létrehozásának időpontja
 updated_at	TIMESTAMP	Fiók utolsó frissítésének időpontja
+
 2. Könyvek tábla (books)
+
 Oszlop neve	Típus	Leírás
 id	INT (PK)	Egyedi azonosító, auto increment
 title	VARCHAR(255)	Könyv címe
@@ -20,18 +23,24 @@ description	TEXT	Rövid leírás a könyvről
 file_path	VARCHAR(255)	Fájl elérési útvonala (a feltöltött PDF)
 created_at	TIMESTAMP	Könyv feltöltésének időpontja
 updated_at	TIMESTAMP	Könyv utolsó frissítésének időpontja
+
+
 3. Oldalak tábla (pages)
+
 Oszlop neve	Típus	Leírás
 id	INT (PK)	Egyedi azonosító, auto increment
 book_id	INT (FK)	Könyv azonosító (books táblára hivatkozva)
 page_number	INT	Az oldal sorszáma (1-től n-ig)
 image_path	VARCHAR(255)	Kép elérési útvonala
 created_at	TIMESTAMP	Oldal létrehozásának időpontja
+
+
 Adatbázis kapcsolatok
 users ↔ books: Egy felhasználó több könyvet is feltölthet (1
 kapcsolat).
 books ↔ pages: Egy könyvhez több oldal is tartozhat (1
 kapcsolat).
+
 Működési logika
 Feltöltés: A felhasználó feltölti a PDF fájlt a könyv feltöltésekor. A books táblába bejegyzés kerül, amely tartalmazza a PDF fájl elérési útját (file_path).
 Oldalak kinyerése: A PDF fájl feldolgozása után a rendszer kinyeri az oldalakat, és minden oldal képét elmenti a szerverre. Minden oldal adatait a pages táblában tároljuk.
