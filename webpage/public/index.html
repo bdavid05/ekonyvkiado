@@ -14,18 +14,35 @@
       border-radius: 15px;
     }
 
+    /* Modal lekerekítése */
+    .modal-content {
+      border-radius: 15px;
+    }
+
     /* Profilkép beállítása */
     .profile-pic {
-      width: 40px;
-      height: 40px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       object-fit: cover;
     }
 
     /* Alapértelmezett ikon mérete és színezése */
     .profile-icon {
-      font-size: 40px;
+      font-size: 20px;
       color: black; /* Szabadon színezhető */
+    }
+
+    /* Regisztráció gomb középre helyezése */
+    .center-button {
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Piros csillag a kötelező mezőhöz */
+    .required::after {
+      content: " *";
+      color: red;
     }
   </style>
 </head>
@@ -67,13 +84,15 @@
         <form>
           <div class="mb-3">
             <label for="emailLogin" class="form-label">Email cím</label>
-            <input type="email" class="form-control" id="emailLogin" placeholder="Adja meg az email címét">
+            <input type="email" class="form-control" id="emailLogin" placeholder="Adja meg az email címét" required>
           </div>
           <div class="mb-3">
             <label for="passwordLogin" class="form-label">Jelszó</label>
-            <input type="password" class="form-control" id="passwordLogin" placeholder="Adja meg a jelszavát">
+            <input type="password" class="form-control" id="passwordLogin" placeholder="Adja meg a jelszavát" required>
           </div>
-          <button type="submit" class="btn btn-primary" onclick="login()">Bejelentkezés</button>
+          <div class="center-button">
+            <button type="submit" class="btn btn-primary" onclick="login()">Bejelentkezés</button>
+          </div>
         </form>
       </div>
     </div>
@@ -89,20 +108,34 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form>
+        <form id="registerForm">
           <div class="mb-3">
-            <label for="emailRegister" class="form-label">Email cím</label>
-            <input type="email" class="form-control" id="emailRegister" placeholder="Adja meg az email címét">
+            <label for="usernameRegister" class="form-label required">Felhasználónév</label>
+            <input type="text" class="form-control" id="usernameRegister" placeholder="Adja meg a felhasználónevét" required>
           </div>
           <div class="mb-3">
-            <label for="passwordRegister" class="form-label">Jelszó</label>
-            <input type="password" class="form-control" id="passwordRegister" placeholder="Adja meg a jelszavát">
+            <label for="emailRegister" class="form-label required">Email cím</label>
+            <input type="email" class="form-control" id="emailRegister" placeholder="Adja meg az email címét" required>
           </div>
           <div class="mb-3">
-            <label for="passwordConfirm" class="form-label">Jelszó megerősítése</label>
-            <input type="password" class="form-control" id="passwordConfirm" placeholder="Erősítse meg a jelszavát">
+            <label for="passwordRegister" class="form-label required">Jelszó</label>
+            <input type="password" class="form-control" id="passwordRegister" placeholder="Adja meg a jelszavát" required>
           </div>
-          <button type="submit" class="btn btn-primary">Regisztráció</button>
+          <div class="mb-3">
+            <label for="passwordConfirm" class="form-label required">Jelszó megerősítése</label>
+            <input type="password" class="form-control" id="passwordConfirm" placeholder="Erősítse meg a jelszavát" required>
+          </div>
+          <div class="mb-3">
+            <label for="profilePicture" class="form-label">Profilkép (opcionális)</label>
+            <input type="file" class="form-control" id="profilePicture" accept="image/*">
+          </div>
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="termsCheck" required>
+            <label class="form-check-label required" for="termsCheck">Elolvastam és elfogadom a felhasználási feltételeket</label>
+          </div>
+          <div class="center-button">
+            <button type="button" class="btn btn-primary" onclick="register()">Regisztráció</button>
+          </div>
         </form>
       </div>
     </div>
@@ -115,6 +148,7 @@
 <script>
   // Bejelentkezési állapot ellenőrzése
   let isLoggedIn = false; // Ez jelzi, hogy a felhasználó be van-e jelentkezve
+  let profileImage = "";  // Ezt használjuk a feltöltött profilkép tárolására
   
   // Esemény, amely a bejelentkezés után hívódik meg
   function login() {
@@ -125,15 +159,55 @@
   // Esemény, amely a kijelentkezés után hívódik meg
   function logout() {
     isLoggedIn = false;
+    profileImage = "";  // Kijelentkezéskor visszaállítjuk az alapértelmezett ikont
     updateProfileIcon();
+  }
+
+  // Regisztrációs folyamat
+  function register() {
+    const username = document.getElementById("usernameRegister").value;
+    const email = document.getElementById("emailRegister").value;
+    const password = document.getElementById("passwordRegister").value;
+    const passwordConfirm = document.getElementById("passwordConfirm").value;
+    const profilePictureInput = document.getElementById("profilePicture");
+    const termsCheck = document.getElementById("termsCheck");
+
+    // Ellenőrizzük, hogy minden kötelező mező ki van-e töltve
+    if (!username || !email || !password || !passwordConfirm || !termsCheck.checked) {
+      alert("Kérlek, töltsd ki az összes kötelező mezőt, és fogadd el a felhasználási feltételeket!");
+      return;
+    }
+
+    if (password !== passwordConfirm) {
+      alert("A jelszavak nem egyeznek meg!");
+      return;
+    }
+
+    // Profilkép kezelése (ha van feltöltve)
+    if (profilePictureInput.files.length > 0) {
+      const file = profilePictureInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        profileImage = e.target.result; // Beállítjuk a feltöltött képet
+        updateProfileIcon(); // Frissítjük az ikont
+      }
+      reader.readAsDataURL(file);
+    }
+
+    // Sikeres regisztráció üzenet
+    alert("Sikeresen regisztráltál!");
+    
+    // Modal bezárása
+    const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+    registerModal.hide();
   }
 
   // Profil ikon vagy kép frissítése a bejelentkezési állapot alapján
   function updateProfileIcon() {
     const profileIconElement = document.getElementById('profileIcon');
     if (isLoggedIn) {
-      // Ha be van jelentkezve, mutassuk a profilképet (pl. saját kép)
-      profileIconElement.outerHTML = `<img src="https://randomuser.me/api/portraits/men/75.jpg" alt="Profilkép" class="profile-pic">`;
+      // Ha be van jelentkezve, mutassuk a profilképet
+      profileIconElement.outerHTML = `<img src="${profileImage || "https://randomuser.me/api/portraits/men/75.jpg"}" alt="Profilkép" class="profile-pic">`;
     } else {
       // Ha nincs bejelentkezve, mutassuk az alapértelmezett ikont
       profileIconElement.outerHTML = `<span id="profileIcon" class="bi bi-person profile-icon"></span>`;
