@@ -81,7 +81,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form>
+        <form id="loginForm">
           <div class="mb-3">
             <label for="emailLogin" class="form-label">Email cím</label>
             <input type="email" class="form-control" id="emailLogin" placeholder="Adja meg az email címét" required>
@@ -91,7 +91,7 @@
             <input type="password" class="form-control" id="passwordLogin" placeholder="Adja meg a jelszavát" required>
           </div>
           <div class="center-button">
-            <button type="submit" class="btn btn-primary" onclick="login()">Bejelentkezés</button>
+            <button type="button" class="btn btn-primary" onclick="login()">Bejelentkezés</button>
           </div>
         </form>
       </div>
@@ -146,25 +146,38 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  // Bejelentkezési állapot ellenőrzése
   let isLoggedIn = false; // Ez jelzi, hogy a felhasználó be van-e jelentkezve
   let profileImage = "";  // Ezt használjuk a feltöltött profilkép tárolására
-  
-  // Esemény, amely a bejelentkezés után hívódik meg
-  function login() {
-    isLoggedIn = true;
-    updateProfileIcon();
+
+  async function login() {
+    const email = document.getElementById("emailLogin").value;
+    const password = document.getElementById("passwordLogin").value;
+
+    const response = await fetch('login.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      isLoggedIn = true;
+      profileImage = data.profile_picture || "https://randomuser.me/api/portraits/men/75.jpg"; // Alapértelmezett kép
+      updateProfileIcon();
+      alert("Sikeresen bejelentkeztél!");
+      
+      // Modal bezárása
+      const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+      loginModal.hide();
+    } else {
+      alert(data.message); // Hibaüzenet
+    }
   }
 
-  // Esemény, amely a kijelentkezés után hívódik meg
-  function logout() {
-    isLoggedIn = false;
-    profileImage = "";  // Kijelentkezéskor visszaállítjuk az alapértelmezett ikont
-    updateProfileIcon();
-  }
-
-  // Regisztrációs folyamat
-  function register() {
+  async function register() {
     const username = document.getElementById("usernameRegister").value;
     const email = document.getElementById("emailRegister").value;
     const password = document.getElementById("passwordRegister").value;
@@ -184,32 +197,49 @@
     }
 
     // Profilkép kezelése (ha van feltöltve)
+    let profilePicture = null;
     if (profilePictureInput.files.length > 0) {
       const file = profilePictureInput.files[0];
       const reader = new FileReader();
-      reader.onload = function (e) {
-        profileImage = e.target.result; // Beállítjuk a feltöltött képet
-        updateProfileIcon(); // Frissítjük az ikont
+      reader.onload = async function (e) {
+        profilePicture = e.target.result; // Beállítjuk a feltöltött képet
+        await sendRegisterData(username, email, password, profilePicture);
       }
       reader.readAsDataURL(file);
+    } else {
+      await sendRegisterData(username, email, password, profilePicture);
     }
+  }
 
-    // Sikeres regisztráció üzenet
-    alert("Sikeresen regisztráltál!");
-    
-    // Modal bezárása
-    const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
-    registerModal.hide();
+  async function sendRegisterData(username, email, password, profilePicture) {
+    // AJAX kérés a regisztrációhoz
+    const response = await fetch('register.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, email, password, profile_picture: profilePicture })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      alert("Sikeresen regisztráltál!");
+      
+      // Modal bezárása
+      const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+      registerModal.hide();
+    } else {
+      alert(data.message); // Hibaüzenet
+    }
   }
 
   // Profil ikon vagy kép frissítése a bejelentkezési állapot alapján
   function updateProfileIcon() {
     const profileIconElement = document.getElementById('profileIcon');
     if (isLoggedIn) {
-      // Ha be van jelentkezve, mutassuk a profilképet
-      profileIconElement.outerHTML = `<img src="${profileImage || "https://randomuser.me/api/portraits/men/75.jpg"}" alt="Profilkép" class="profile-pic">`;
+      profileIconElement.outerHTML = `<img src="${profileImage}" alt="Profilkép" class="profile-pic">`;
     } else {
-      // Ha nincs bejelentkezve, mutassuk az alapértelmezett ikont
       profileIconElement.outerHTML = `<span id="profileIcon" class="bi bi-person profile-icon"></span>`;
     }
   }
@@ -217,6 +247,7 @@
   // Oldal betöltésekor frissítsd a profilikont
   document.addEventListener('DOMContentLoaded', updateProfileIcon);
 </script>
+
 
 </body>
 </html>
